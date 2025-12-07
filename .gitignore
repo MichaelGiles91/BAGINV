@@ -1,0 +1,19 @@
+#Build folders
+Debug/
+Release/
+x64/
+x84/
+
+# VS cache
+.vs/
+.ipch/
+
+# User-specific files
+*.user
+*.userprefs
+*.suo
+*.vcxproj.user
+
+# CMake cache if any
+CMakeFiles/
+CMakeCache.txt
