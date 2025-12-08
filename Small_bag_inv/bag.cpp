@@ -27,6 +27,17 @@ bool bag::RemoveItemByIndex(size_t index)
 		return false;
 
 	}
+	auto& item = items[index];
+	if (item.quantity > 1) {
+		item.quantity--;
+		return true;
+	}
+	else {
+		items.erase(items.begin() + index);
+		return true;
+
+	}
+
 	items.erase(items.begin() + static_cast<long long>(index));
 	return true;
 }
