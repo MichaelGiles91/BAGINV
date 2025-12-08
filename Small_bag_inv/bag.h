@@ -7,25 +7,29 @@
 
 
 using namespace std;
-
+struct InventoryItem {
+	int id; // unique ids assigned by inv
+	string name; // display item name
+};
 class bag
 {
 public:
 
 	bag();
+	//adds item by name and returns IDs
+	int AddItem(const string& name);
+	// Removes Items at the given index (0 based) returns true if removed.
+	bool RemoveItemByIndex(size_t index);
 
-	void AddItem();
-	void RemoveItem();
-	void ViewItems();
-	bool QuitProgram();
+	//read only acces for items
+	const vector<InventoryItem>& GetItems()const;
+
+	// helpers
+	bool isEmpty()const;
+	size_t GetSize()const;
+
 private:
-	string item;
-	int NumChoice = 0;
-	int index = -1;
-
-	vector<string> items = { "Penis", "vagina", "taint" ,"sword" };
-
-	bool quit = false;
-	string userinput;
+	vector<InventoryItem> items;
+	int NextId;
 };
 

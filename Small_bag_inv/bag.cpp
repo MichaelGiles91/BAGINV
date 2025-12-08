@@ -1,49 +1,42 @@
 #include "bag.h"
-bag::bag() {
+#include <iostream>
+bag::bag(): NextId(1) {
 
+	//starting equipment
+	items.push_back({ NextId++, "Rusty Sword" });
+	items.push_back({ NextId++, "Quarter Staff" });
+	items.push_back({ NextId++, "Short Bow" });
+	items.push_back({ NextId++, "Hand Crossbow" });
+	items.push_back({ NextId++, "Butcher's Knife" });
 }
-void bag::AddItem()
+int bag::AddItem(const string& name)
 {
-	cout << " add a item to the bag: " << endl;
-	getline(cin >> ws, userinput);
-	items.push_back(userinput);
-}
+	InventoryItem newItem;
+	newItem.id = NextId++;
+	newItem.name = name;
 
-void bag::RemoveItem()
-{
-	if (items.empty()) {
-		cout << "Bag is Empty" << endl;
-		return;
-	}
-	for (size_t i = 0; i < items.size(); i++)
-	{
-		cout << (i + 1) << ". " << items[i] << endl;
-
-	}
-	cout << "What Item do you want removed: " << endl;
-	cin >> NumChoice;
-	index = NumChoice - 1;
-	if (index >= 0 && index < static_cast<int>(items.size())) {
-		items.erase(items.begin() + index);
-	}
-	else {
-		cout << "Error" << endl;
-	}
+	items.push_back(newItem);
+	return newItem.id;
 }
 
-void bag::ViewItems()
+
+bool bag::RemoveItemByIndex(size_t index)
 {
-	if (items.empty()) {
-		cout << " Bag is empty" <<endl;
-		return;
+	if (index >= items.size()) {
+		return false;
+
 	}
-	for (int i = 0; i < items.size(); i++) {
-		cout << items[i] << endl;
-	}
+	items.erase(items.begin() + static_cast<long long>(index));
+	return true;
 }
 
-bool bag::QuitProgram()
-{
-	quit = true;
-	return quit;
+bool bag::isEmpty()const {
+	return items.empty();
+
+}
+size_t bag::GetSize() const {
+	return items.size();
+}
+const vector<InventoryItem>& bag::GetItems()const {
+	return items;
 }
