@@ -9,15 +9,25 @@ bag::bag(): NextId(1) {
 	items.push_back({ NextId++, "Hand Crossbow" ,1 });
 	items.push_back({ NextId++, "Butcher's Knife" ,1 });
 }
-int bag::AddItem(const string& name, int quantity)
+int bag::AddItem(const string& name, int quantitytoAdd = 1)
 {
+	// if item is found add to quantity
+	for (auto& item : items) {
+		if (item.name == name) {
+			item.quantity += quantitytoAdd;
+			return item.id;
+		}
+	}
+	// if item is not found create item
 	InventoryItem newItem;
 	newItem.id = NextId++;
 	newItem.name = name;
-	newItem.quantity = quantity;
+	newItem.quantity = quantitytoAdd;
 
 	items.push_back(newItem);
 	return newItem.id;
+
+
 }
 
 
