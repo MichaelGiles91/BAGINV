@@ -10,6 +10,7 @@ using namespace std;
 struct InventoryItem {
 	int id; // unique ids assigned by inv
 	string name; // display item name
+	int quantity; // displays the number of one unique item
 };
 class bag
 {
@@ -17,7 +18,7 @@ public:
 
 	bag();
 	//adds item by name and returns IDs
-	int AddItem(const string& name);
+	int AddItem(const string& name, int quantity);
 	// Removes Items at the given index (0 based) returns true if removed.
 	bool RemoveItemByIndex(size_t index);
 

@@ -3,17 +3,18 @@
 bag::bag(): NextId(1) {
 
 	//starting equipment
-	items.push_back({ NextId++, "Rusty Sword" });
-	items.push_back({ NextId++, "Quarter Staff" });
-	items.push_back({ NextId++, "Short Bow" });
-	items.push_back({ NextId++, "Hand Crossbow" });
-	items.push_back({ NextId++, "Butcher's Knife" });
+	items.push_back({ NextId++, "Rusty Sword",1 });
+	items.push_back({ NextId++, "Quarter Staff" ,1});
+	items.push_back({ NextId++, "Short Bow" ,1});
+	items.push_back({ NextId++, "Hand Crossbow" ,1 });
+	items.push_back({ NextId++, "Butcher's Knife" ,1 });
 }
-int bag::AddItem(const string& name)
+int bag::AddItem(const string& name, int quantity)
 {
 	InventoryItem newItem;
 	newItem.id = NextId++;
 	newItem.name = name;
+	newItem.quantity = quantity;
 
 	items.push_back(newItem);
 	return newItem.id;
