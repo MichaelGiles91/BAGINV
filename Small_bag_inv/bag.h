@@ -3,6 +3,9 @@
 #include <string>
 #include <iostream>
 #include "stdlib.h"
+#include "fstream"
+#include "sstream"
+
 
 
 
@@ -24,6 +27,9 @@ public:
 
 	//read only acces for items
 	const vector<InventoryItem>& GetItems()const;
+
+	bool SaveToFiles(const string& filename) const;
+	bool LoadFromFiles(const string& filename);
 
 	// helpers
 	bool isEmpty()const;

@@ -1,0 +1,4 @@
+1 Rusty sword 1
+2 Telescope 1
+3 Berry Meade 5
+4 Crossbow 1
