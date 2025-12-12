@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include "bag.h"
+#include <limits>
 
 
 using namespace std;
@@ -20,22 +21,25 @@ int main() {
 		cout << "3. View all items" << endl;
 		cout << "4. Save inventory" << endl;
 		cout << "5. Load inventory" << endl;
-		cout << "6.quit" << endl;
+		cout << "6. quit" << endl;
 
 		int input1;
 		std::cin >> input1;
 		switch (input1) {
 		case 1: {
 
+			std::string name;
 			cout << "Enter item name: ";
 			getline(cin >> ws, name);
 
+			int qty = 0;
 			cout << "Enter the quantity: ";
-			int qty;
 			cin >> qty;
 
-			myBag.AddItem(name, qty);
-			cout << "Added: " << qty <<" " << name << endl;
+			 int id = myBag.AddItem(name, qty);
+			 if (id == -1) {
+				 std::cout << "invalid item name or quantity\n";
+			}
 			break;
 		}
 		case 2: {
@@ -49,7 +53,7 @@ int main() {
 				cout << (i + 1) << ") " << items[i].name << " x"<< items[i].quantity << endl;
 
 			}
-			cout << "Enter index to remove: " << endl;
+			cout << "Enter index to remove one from the stack: " << endl;
 			std::cin >> chosenIndex;
 			int zeroBase = chosenIndex - 1;
 
@@ -59,10 +63,10 @@ int main() {
 			}
 			size_t ChosenConIndex = static_cast<size_t>(zeroBase);
 
-			bool removed = myBag.RemoveItemByIndex(ChosenConIndex);
+			bool removed = myBag.RemoveOneByIndex(ChosenConIndex);
 
-			if (removed = true) {
-				cout << "Item succesfully removed" << endl;
+			if (removed) {
+				cout << "Quantity reduced by 1" << endl;
 			}
 			else {
 				cout << "Something went wrong!" << endl;
@@ -87,7 +91,7 @@ int main() {
 			break;
 		}
 		case 4:{
-			if (myBag.SaveToFiles("inventory.txt")) {
+			if (myBag.SaveToFiles("Inventory.txt")) {
 				cout << "Inventory saved.\n";
 
 			}
@@ -97,7 +101,7 @@ int main() {
 			break;
 		}
 		case 5: {
-			if (myBag.LoadFromFiles("inventory.txt")) {
+			if (myBag.LoadFromFiles("Inventory.txt")) {
 				cout << "Inventory loaded.\n";
 
 			}
