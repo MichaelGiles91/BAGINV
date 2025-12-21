@@ -1,20 +1,38 @@
 #pragma once
 #include <vector>
 #include <string>
-#include <iostream>
 #include "stdlib.h"
 #include "fstream"
 #include "sstream"
+#include <algorithm>
+#include <cctype>
 
 
 
 
 using namespace std;
+enum class ItemType
+{
+	Armor,
+	Consumable,
+	Material,
+	Quest,
+	Misc
+};
 struct InventoryItem {
 	int id; // unique ids assigned by inv
 	string name; // display item name
 	int quantity; // displays the number of one unique item
+	ItemType type = ItemType::Misc;
 };
+enum class BagResult
+{
+	Success,
+	InvalidInput,
+	NotFound,
+	StackOverflow
+};
+
 class bag
 {
 public:
@@ -23,13 +41,14 @@ public:
 
 	bag();
 
-	void Additem();
+
 	//adds item by name and returns IDs
-	int AddItem(const string& name, int quantity);
+	BagResult AddItem(const std::string& name, int quantityToAdd, int& outItemId);
+
 	// Removes Items at the given index (0 based) returns true if removed.
-	bool RemoveItemByIndex(size_t index);
-	bool RemoveOneByIndex(size_t index);
-	void ViewItems()const;
+	BagResult RemoveItemByIndex(size_t index);
+	BagResult RemoveOneByIndex(size_t index);
+	
 
 	//read only acces for items
 	const vector<InventoryItem>& GetItems()const;
@@ -44,6 +63,11 @@ public:
 	static constexpr int MAX_STACK = 999;
 
 private:
+	static std::string Trim(const std::string& s);
+	static std::string Tolower(std::string s);
+	static bool NamesEqual(const std::string& a, const std::string& b, bool caseInsensitive);
+	static bool isStackable(ItemType type);
+	
 	vector<InventoryItem> items;
 	int NextId;
 	

@@ -1,6 +1,6 @@
 #include "bag.h"
-#include <iostream>
-#include <limits>
+
+
 bag::bag(): NextId(1) {
 
 	//starting equipment
@@ -10,122 +10,63 @@ bag::bag(): NextId(1) {
 	//items.push_back({ NextId++, "Hand Crossbow" ,1 });
 	//items.push_back({ NextId++, "Butcher's Knife" ,1 });
 }
-void bag::Additem()
+BagResult bag::AddItem(const string& name, int quantitytoAdd, int& outItemId )
 {
-	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-	string name;
-	int qty = 0;
+	std::string cleanName = Trim(name);
 
-	while (true) {
-		cout << "Enter item name: ";
-		getline(cin, name);
+	if (cleanName.empty() || quantitytoAdd <= 0 || quantitytoAdd > MAX_STACK)
+		return BagResult::InvalidInput;
 
-		if (!name.empty()) {
-			break;
-		}
-		cout << "Name cannot be empty.\n";
-	}
-
-	while (true) {
-		cout << "enter quantity (-1" << MAX_STACK << "): ";
-		if (!(cin >> qty)) {
-			cin.clear();
-			cin.ignore(numeric_limits<streamsize>::max(), '\n');
-			cout << "Invalid number.\n";
-			continue;
-		}
-		if (qty <= 0 || qty > MAX_STACK) {
-			cout << "quantity must be between 1 and " << MAX_STACK << ".\n";
-			continue;
-		}
-		break;
-	}
-	int resultId = AddItem(name, qty);
-	if (resultId == -1)
-	{
-		std::cout << "Add failed (stack limit or invalid input).\n";
-	}
-	else
-	{
-		std::cout << "Added/updated item id: " << resultId << "\n";
-	}
-}
-int bag::AddItem(const string& name, int quantitytoAdd)
-{
-	// core rules
-	if (name.empty()) return -1;
-	if (quantitytoAdd <= 0) return -1;
-	if (quantitytoAdd > MAX_STACK) return -1;
-
-	// stack if name already exists
 	for (auto& item : items)
 	{
-		if (item.name == name)
+		if (NamesEqual(item.name, cleanName, true))
 		{
 			if (item.quantity + quantitytoAdd > MAX_STACK)
-				return -1;
+				return BagResult::StackOverflow;
 
 			item.quantity += quantitytoAdd;
-			return item.id;
+			outItemId = item.id;
+			return BagResult::Success;
 		}
 	}
 
-	// otherwise create new item
 	InventoryItem newItem;
 	newItem.id = NextId++;
-	newItem.name = name;
+	newItem.name = cleanName;
 	newItem.quantity = quantitytoAdd;
 
 	items.push_back(newItem);
-	return newItem.id;
+	outItemId = newItem.id;
+	return BagResult::Success;
 }
-
-
-
-bool bag::RemoveItemByIndex(size_t index)
+BagResult bag::RemoveItemByIndex(size_t index)
 {
-	// searches threw items and if cant find it returns false
+	
 	if (index >= items.size()) {
-		return false;
-
+		return BagResult::NotFound;
 	}
-	items.erase(items.begin() + static_cast<long long>(index));
-	return true;
+		items.erase(items.begin() + index);
+		return BagResult::Success;
+	
+
 	
 }
-bool bag::RemoveOneByIndex(size_t index)
+BagResult bag::RemoveOneByIndex(size_t index)
 {
-
 	if (index >= items.size())
-		return false;
+		return BagResult::NotFound;
 
-	if (items[index].quantity > 1)
+	// if quantity is already weird, treat as remove entry
+	if (items[index].quantity <= 1)
 	{
-		items[index].quantity--;
-		return true;
+		items.erase(items.begin() + index);
+		return BagResult::Success;
 	}
 
-	// quantity is 1 (or weirdly <= 0), remove the entry
-	items.erase(items.begin() + static_cast<long long>(index));
-	return true;
+	items[index].quantity -= 1;
+	return BagResult::Success;
 }
-void bag::ViewItems()const {
-	
-	if (items.empty())
-	{
-		std::cout << "(empty)\n";
-		return;
-	}
-
-	for (size_t i = 0; i < items.size(); i++)
-	{
-		std::cout << i << ": " << items[i].name << " x" << items[i].quantity
-				<< " (id " << items[i].id << ")\n";
-	}
-	
-}
-
 bool bag::isEmpty()const {
 	return items.empty();
 
@@ -133,10 +74,50 @@ bool bag::isEmpty()const {
 size_t bag::GetSize() const {
 	return items.size();
 }
+std::string bag::Trim(const std::string& s)
+{
+	size_t start = 0;
+	while (start < s.size() && std::isspace(static_cast<unsigned char>(s[start]))) {
+		++start;
+	}
+	size_t end = s.size();
+	while (end > start && std::isspace(static_cast<unsigned char>(s[end - 1]))) {
+		--end;
+	}
+	return s.substr(start, end - start);
+}
+std::string bag::Tolower(std::string s)
+{
+	std::transform(s.begin(), s.end(), s.begin(),
+		[](unsigned char c) {return static_cast<char>(std::tolower(c)); });
+
+	return s;
+}
+bool bag::NamesEqual(const std::string& a, const std::string& b, bool caseInsensitive) {
+	if (!caseInsensitive) {
+		return a == b;
+		
+	}
+	return Tolower(a) == Tolower(b);
+}
+bool bag::isStackable(ItemType type)
+{
+	switch (type)
+	{
+	case ItemType::Consumable:
+	case ItemType::Material:
+	case ItemType::Misc:
+		return true;
+	case ItemType::Armor:
+	case ItemType::Quest:
+	default:
+		return false;
+	}
+	
+}
 const vector<InventoryItem>& bag::GetItems()const {
 	return items;
 }
-
 bool bag::SaveToFiles(const string& filename) const
 {
 	// reads file
@@ -154,7 +135,6 @@ bool bag::SaveToFiles(const string& filename) const
 	}
 	return true;
 }
-
 bool bag::LoadFromFiles(const string& filename)
 {
 	// loads save file as long as it opens
@@ -169,12 +149,13 @@ bool bag::LoadFromFiles(const string& filename)
 	string line;
 	// parsing
 	while (getline(inFile, line)) {
+		line = Trim(line);
 		if (line.empty()) {
-
+			
 			continue; // skips blank lines
 		}
 		size_t firstSpace = line.find(' ');
-		//??
+		
 		if (firstSpace == string::npos) {
 
 			continue; // malformed line
@@ -187,11 +168,12 @@ bool bag::LoadFromFiles(const string& filename)
 			continue; // malformed line
 		}
 		string idStr = line.substr(0, firstSpace);
-		string nameStr = line.substr(firstSpace + 1, lastSpace - firstSpace - 1);
+		string nameStr = Trim(line.substr(firstSpace + 1, lastSpace - firstSpace - 1));
 		string qtyStr = line.substr(lastSpace + 1);
-
-
-
+		
+		if (nameStr.empty()) {
+			continue;
+		}
 		InventoryItem item;
 
 		try {
@@ -201,6 +183,14 @@ bool bag::LoadFromFiles(const string& filename)
 
 		catch (...) {
 			continue; // bad numbers, skip line
+		}
+		if (item.id < 0) 
+		{ 
+			continue; 
+		}
+		if (item.quantity <= 0 || item.quantity > MAX_STACK)
+		{
+			continue;
 		}
 
 		item.name = nameStr;

@@ -36,10 +36,20 @@ int main() {
 			cout << "Enter the quantity: ";
 			cin >> qty;
 
-			 int id = myBag.AddItem(name, qty);
-			 if (id == -1) {
-				 std::cout << "invalid item name or quantity\n";
-			}
+			 int id = -1;
+			 BagResult result = myBag.AddItem(name, qty, id);
+			 if (result == BagResult::Success)
+			 {
+				 cout << "Added/updated item id: " << id << "\n";
+			 }
+			 else if (result == BagResult::StackOverflow)
+			 {
+				 cout << "Too many. Would exceed max stack.\n";
+			 }
+			 else
+			 {
+				 cout << "Invalid name or quantity.\n";
+			 }
 			break;
 		}
 		case 2: {
@@ -48,7 +58,7 @@ int main() {
 				break;
 			}
 			const auto& items = myBag.GetItems();
-			for (int i = 0; i < items.size(); i++)
+			for (size_t i = 0; i < items.size(); i++)
 			{
 				cout << (i + 1) << ") " << items[i].name << " x"<< items[i].quantity << endl;
 
@@ -63,9 +73,9 @@ int main() {
 			}
 			size_t ChosenConIndex = static_cast<size_t>(zeroBase);
 
-			bool removed = myBag.RemoveOneByIndex(ChosenConIndex);
+			BagResult r = myBag.RemoveOneByIndex(ChosenConIndex);
 
-			if (removed) {
+			if (r == BagResult::Success) {
 				cout << "Quantity reduced by 1" << endl;
 			}
 			else {
