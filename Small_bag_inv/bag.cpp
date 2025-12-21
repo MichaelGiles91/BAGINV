@@ -61,6 +61,7 @@ BagResult bag::RemoveOneByIndex(size_t index)
 	if (items[index].quantity <= 1)
 	{
 		items.erase(items.begin() + index);
+
 		return BagResult::Success;
 	}
 
