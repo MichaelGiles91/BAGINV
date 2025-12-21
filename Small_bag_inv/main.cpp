@@ -19,9 +19,11 @@ int main() {
 		cout << "1. Add  an item" << endl;
 		cout << "2. Remove an item" << endl;
 		cout << "3. View all items" << endl;
-		cout << "4. Save inventory" << endl;
-		cout << "5. Load inventory" << endl;
-		cout << "6. quit" << endl;
+		cout << "4. Sort Items by name" << endl;
+		cout << "5. Search Items" << endl;
+		cout << "6. Save inventory" << endl;
+		cout << "7. Load inventory" << endl;
+		cout << "8. quit" << endl;
 
 		int input1;
 		std::cin >> input1;
@@ -36,20 +38,20 @@ int main() {
 			cout << "Enter the quantity: ";
 			cin >> qty;
 
-			 int id = -1;
-			 BagResult result = myBag.AddItem(name, qty, id);
-			 if (result == BagResult::Success)
-			 {
-				 cout << "Added/updated item id: " << id << "\n";
-			 }
-			 else if (result == BagResult::StackOverflow)
-			 {
-				 cout << "Too many. Would exceed max stack.\n";
-			 }
-			 else
-			 {
-				 cout << "Invalid name or quantity.\n";
-			 }
+			int id = -1;
+			BagResult result = myBag.AddItem(name, qty, id);
+			if (result == BagResult::Success)
+			{
+				cout << "Added/updated item id: " << id << "\n";
+			}
+			else if (result == BagResult::StackOverflow)
+			{
+				cout << "Too many. Would exceed max stack.\n";
+			}
+			else
+			{
+				cout << "Invalid name or quantity.\n";
+			}
 			break;
 		}
 		case 2: {
@@ -58,9 +60,9 @@ int main() {
 				break;
 			}
 			const auto& items = myBag.GetItems();
-			for (size_t i = 0; i < items.size(); i++)
+			for (int i = 0; i < items.size(); i++)
 			{
-				cout << (i + 1) << ") " << items[i].name << " x"<< items[i].quantity << endl;
+				cout << (i + 1) << ") " << items[i].name << " x" << items[i].quantity << endl;
 
 			}
 			cout << "Enter index to remove one from the stack: " << endl;
@@ -84,7 +86,7 @@ int main() {
 			break;
 		}
 		case 3: {
-			
+
 			const auto& items = myBag.GetItems();
 			if (items.empty()) {
 				cout << "Bag is empty" << endl;
@@ -100,7 +102,40 @@ int main() {
 
 			break;
 		}
-		case 4:{
+		case 4: {
+			cout << "Items Sorted" << "\n";
+			auto sorted = myBag.GetItemsSortedByName(true);
+			for (size_t i = 0; i < sorted.size(); ++i)
+			{
+				std::cout << i << ") " << sorted[i].name
+					<< " x" << sorted[i].quantity
+					<< " (id " << sorted[i].id << ")\n";
+			}
+			break;
+		}
+		case 5: {
+			std::string query;
+			cout << "Search for: ";
+			getline(cin >> ws, query);
+
+			auto matches = myBag.FindIndicesByName(query, true);
+			const auto& items = myBag.GetItems();
+
+			if (matches.empty())
+			{
+				cout << "No matches.\n";
+			}
+			else
+			{
+				for (size_t idx : matches)
+				{
+					cout << items[idx].name << " x" << items[idx].quantity
+						<< " (id " << items[idx].id << ")\n";
+				}
+			}
+			break;
+		}
+		case 6: {
 			if (myBag.SaveToFiles("Inventory.txt")) {
 				cout << "Inventory saved.\n";
 
@@ -110,7 +145,7 @@ int main() {
 			}
 			break;
 		}
-		case 5: {
+		case 7: {
 			if (myBag.LoadFromFiles("Inventory.txt")) {
 				cout << "Inventory loaded.\n";
 
@@ -120,7 +155,7 @@ int main() {
 			}
 			break;
 		}
-		case 6: {
+		case 8: {
 			cout << "Thank you for visiting!" << endl;
 			running = false;
 			break;
@@ -129,9 +164,9 @@ int main() {
 			cout << "invalid options. Pick a new option:" << endl;
 			break;
 		}
-
 		}
-	} while (running);
+	}
+	while (running);
 
-
+	
 };

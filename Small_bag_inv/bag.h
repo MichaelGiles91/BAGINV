@@ -20,9 +20,9 @@ enum class ItemType
 	Misc
 };
 struct InventoryItem {
-	int id; // unique ids assigned by inv
+	int id = -1; // unique ids assigned by inv
 	string name; // display item name
-	int quantity; // displays the number of one unique item
+	int quantity = 0; // displays the number of one unique item
 	ItemType type = ItemType::Misc;
 };
 enum class BagResult
@@ -62,6 +62,11 @@ public:
 
 	static constexpr int MAX_STACK = 999;
 
+	//sorting
+	std::vector<InventoryItem> GetItemsSortedByName(bool ascending = true, bool caseInsensitive = true) const;
+	std::vector<InventoryItem> GetItemsSortedByQuantity(bool ascending = true) const;
+	std::vector<InventoryItem> GetItemsSortedById(bool ascending = true) const;
+	std::vector<size_t> FindIndicesByName(const std::string& query, bool caseInsensitive = true) const;
 private:
 	static std::string Trim(const std::string& s);
 	static std::string Tolower(std::string s);

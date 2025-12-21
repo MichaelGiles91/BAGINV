@@ -75,6 +75,103 @@ bool bag::isEmpty()const {
 size_t bag::GetSize() const {
 	return items.size();
 }
+std::vector<InventoryItem> bag::GetItemsSortedByName(bool ascending, bool caseInsensitive) const
+{
+	{
+		std::vector<InventoryItem> copy = items;
+
+		auto lowerCopy = [](std::string s)
+			{
+				for (char& ch : s)
+					ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+				return s;
+			};
+
+		std::sort(copy.begin(), copy.end(),
+			[&](const InventoryItem& a, const InventoryItem& b)
+			{
+				std::string an = caseInsensitive ? lowerCopy(a.name) : a.name;
+				std::string bn = caseInsensitive ? lowerCopy(b.name) : b.name;
+
+				if (ascending) return an < bn;
+				return an > bn;
+			});
+
+		return copy;
+	}
+
+}
+std::vector<InventoryItem> bag::GetItemsSortedByQuantity(bool ascending) const
+{
+
+	std::vector<InventoryItem> copy = items;
+
+	std::sort(copy.begin(), copy.end(),
+		[&](const InventoryItem& a, const InventoryItem& b)
+		{
+			if (ascending) return a.quantity < b.quantity;
+			return a.quantity > b.quantity;
+		});
+
+	return copy;
+}
+std::vector<InventoryItem> bag::GetItemsSortedById(bool ascending) const
+{
+
+	std::vector<InventoryItem> copy = items;
+
+	std::sort(copy.begin(), copy.end(),
+		[&](const InventoryItem& a, const InventoryItem& b)
+		{
+			if (ascending) return a.id < b.id;
+			return a.id > b.id;
+		});
+
+	return copy;
+}
+std::vector<size_t> bag::FindIndicesByName(const std::string& query, bool caseInsensitive) const
+{
+	std::vector<size_t> results;
+
+	auto trimCopy = [](const std::string& s) -> std::string
+		{
+			size_t start = 0;
+			while (start < s.size() && std::isspace(static_cast<unsigned char>(s[start])))
+				++start;
+
+			size_t end = s.size();
+			while (end > start && std::isspace(static_cast<unsigned char>(s[end - 1])))
+				--end;
+
+			return s.substr(start, end - start);
+		};
+
+	auto lowerCopy = [](std::string s)
+		{
+			for (char& ch : s)
+				ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+			return s;
+		};
+
+	std::string q = trimCopy(query);
+	if (q.empty())
+		return results;
+
+	if (caseInsensitive)
+		q = lowerCopy(q);
+
+	for (size_t i = 0; i < items.size(); ++i)
+	{
+		std::string name = items[i].name;
+		if (caseInsensitive)
+			name = lowerCopy(name);
+
+		if (name.find(q) != std::string::npos)
+			results.push_back(i);
+	}
+
+	return results;
+}
 std::string bag::Trim(const std::string& s)
 {
 	size_t start = 0;
