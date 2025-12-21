@@ -1,5 +1,17 @@
 #include "bag.h"
 
+// for parsing
+static bool IsInteger(const std::string& s)
+{
+	if (s.empty()) return false;
+	size_t i = 0;
+	if (s[0] == '-' || s[0] == '+') i = 1;
+	if (i >= s.size()) return false;
+	for (; i < s.size(); ++i)
+		if (!std::isdigit(static_cast<unsigned char>(s[i])))
+			return false;
+	return true;
+}
 
 bag::bag(): NextId(1) {
 
@@ -10,31 +22,38 @@ bag::bag(): NextId(1) {
 	//items.push_back({ NextId++, "Hand Crossbow" ,1 });
 	//items.push_back({ NextId++, "Butcher's Knife" ,1 });
 }
-BagResult bag::AddItem(const string& name, int quantitytoAdd, int& outItemId )
-{
 
+BagResult bag::AddItem(const string& name, int quantitytoAdd, int& outItemId, ItemType type)
+{
 	std::string cleanName = Trim(name);
 
 	if (cleanName.empty() || quantitytoAdd <= 0 || quantitytoAdd > MAX_STACK)
 		return BagResult::InvalidInput;
 
-	for (auto& item : items)
+	// If stackable, merge with existing item (same name, same type).
+	if (isStackable(type))
 	{
-		if (NamesEqual(item.name, cleanName, true))
+		for (auto& item : items)
 		{
-			if (item.quantity + quantitytoAdd > MAX_STACK)
-				return BagResult::StackOverflow;
+			if (item.type == type && NamesEqual(item.name, cleanName, true))
+			{
+				if (item.quantity + quantitytoAdd > MAX_STACK)
+					return BagResult::StackOverflow;
 
-			item.quantity += quantitytoAdd;
-			outItemId = item.id;
-			return BagResult::Success;
+				item.quantity += quantitytoAdd;
+				outItemId = item.id;
+				return BagResult::Success;
+			}
 		}
 	}
 
+	// Non-stackable (Armor/Quest) always creates a new entry,
+	// even if the name matches.
 	InventoryItem newItem;
 	newItem.id = NextId++;
 	newItem.name = cleanName;
 	newItem.quantity = quantitytoAdd;
+	newItem.type = type;
 
 	items.push_back(newItem);
 	outItemId = newItem.id;
@@ -43,11 +62,11 @@ BagResult bag::AddItem(const string& name, int quantitytoAdd, int& outItemId )
 BagResult bag::RemoveItemByIndex(size_t index)
 {
 	
-	if (index >= items.size()) {
+	if (index >= items.size())
 		return BagResult::NotFound;
-	}
-		items.erase(items.begin() + index);
-		return BagResult::Success;
+
+	items.erase(items.begin() + index);
+	return BagResult::Success;
 	
 
 	
@@ -229,7 +248,8 @@ bool bag::SaveToFiles(const string& filename) const
 
 		outFile << item.id << ' '
 			<< item.name << ' '
-			<< item.quantity << '\n';
+			<< item.quantity 
+			<< static_cast<int>(item.type) << '\n';
 	}
 	return true;
 }
@@ -246,59 +266,88 @@ bool bag::LoadFromFiles(const string& filename)
 
 	string line;
 	// parsing
-	while (getline(inFile, line)) {
+	while (getline(inFile, line))
+	{
 		line = Trim(line);
-		if (line.empty()) {
-			
-			continue; // skips blank lines
-		}
+		if (line.empty()) continue;
+
 		size_t firstSpace = line.find(' ');
-		
-		if (firstSpace == string::npos) {
+		if (firstSpace == string::npos) continue;
 
-			continue; // malformed line
-		}
-
+		// Try to parse 4-field format: id [name...] qty type
 		size_t lastSpace = line.rfind(' ');
+		if (lastSpace == string::npos || lastSpace <= firstSpace) continue;
 
-		if (lastSpace == string::npos || lastSpace <= firstSpace) {
+		size_t secondLastSpace = line.rfind(' ', lastSpace - 1);
 
-			continue; // malformed line
+		string idStr = Trim(line.substr(0, firstSpace));
+		string typeStr;
+		string qtyStr;
+		string nameStr;
+
+		string lastTok = Trim(line.substr(lastSpace + 1)); // could be qty (old) or type (new)
+		bool hasType = false;
+
+		if (secondLastSpace != string::npos && secondLastSpace > firstSpace)
+		{
+			string secondLastTok = Trim(line.substr(secondLastSpace + 1, lastSpace - secondLastSpace - 1)); // could be qty (new)
+
+			// New format only if BOTH last and second-last tokens are integers
+			if (IsInteger(secondLastTok) && IsInteger(lastTok))
+			{
+				hasType = true;
+				nameStr = Trim(line.substr(firstSpace + 1, secondLastSpace - firstSpace - 1));
+				qtyStr = secondLastTok;
+				typeStr = lastTok;
+			}
 		}
-		string idStr = line.substr(0, firstSpace);
-		string nameStr = Trim(line.substr(firstSpace + 1, lastSpace - firstSpace - 1));
-		string qtyStr = line.substr(lastSpace + 1);
-		
-		if (nameStr.empty()) {
-			continue;
+
+		if (!hasType)
+		{
+			// Old format: id [name...] qty
+			nameStr = Trim(line.substr(firstSpace + 1, lastSpace - firstSpace - 1));
+			qtyStr = lastTok;
+			typeStr.clear();
 		}
+		else
+		{
+			// Fallback old format: id [name...] qty
+			nameStr = Trim(line.substr(firstSpace + 1, lastSpace - firstSpace - 1));
+			qtyStr = Trim(line.substr(lastSpace + 1));
+			typeStr = "";
+		}
+
+		if (nameStr.empty()) continue;
+
 		InventoryItem item;
+		int typeInt = static_cast<int>(ItemType::Misc);
 
-		try {
+		try
+		{
 			item.id = stoi(idStr);
 			item.quantity = stoi(qtyStr);
-		}
 
-		catch (...) {
-			continue; // bad numbers, skip line
+			if (!typeStr.empty())
+				typeInt = stoi(typeStr);
 		}
-		if (item.id < 0) 
-		{ 
-			continue; 
-		}
-		if (item.quantity <= 0 || item.quantity > MAX_STACK)
+		catch (...)
 		{
 			continue;
 		}
 
+		if (item.id < 0) continue;
+		if (item.quantity <= 0 || item.quantity > MAX_STACK) continue;
+
+		// Clamp/validate type
+		if (typeInt < 0 || typeInt > static_cast<int>(ItemType::Misc))
+			typeInt = static_cast<int>(ItemType::Misc);
+
 		item.name = nameStr;
+		item.type = static_cast<ItemType>(typeInt);
+
 		items.push_back(item);
 
-
-		if (item.id > maxId) {
-			maxId = item.id;
-		}
-
+		if (item.id > maxId) maxId = item.id;
 	}
 	// set NextId once, after reading everything
 	NextId = (maxId >= 0) ? (maxId + 1) : 1;

@@ -5,7 +5,31 @@
 
 
 using namespace std;
+//display for item type.
+string ItemTypeToString(ItemType type)
+{
+	switch (type)
+	{
+	case ItemType::Armor: return "Armor";
+	case ItemType::Consumable: return "Consumable";
+	case ItemType::Material: return "Material";
+	case ItemType::Quest: return "Quest";
+	default: return "Misc";
+	}
+}
 
+// need explaing on what this does, 
+size_t FindIndexById(const bag& b, int id)
+{
+	const auto& items = b.GetItems();
+	for (size_t i = 0; i < items.size(); ++i)
+	{
+		if (items[i].id == id)
+			return i;
+	}
+	return static_cast<size_t>(-1);
+
+}
 int main() {
 
 	bag myBag;
@@ -59,23 +83,19 @@ int main() {
 				cout << "Bag is empty" << endl;
 				break;
 			}
-			const auto& items = myBag.GetItems();
-			for (int i = 0; i < items.size(); i++)
+			int id;
+			cout << "Enter item id to remove: ";
+			cin >> id;
+
+			size_t idx = FindIndexById(myBag, id);
+			if (idx == static_cast<size_t>(-1))
 			{
-				cout << (i + 1) << ") " << items[i].name << " x" << items[i].quantity << endl;
-
-			}
-			cout << "Enter index to remove one from the stack: " << endl;
-			std::cin >> chosenIndex;
-			int zeroBase = chosenIndex - 1;
-
-			if (zeroBase < 0 || zeroBase >= items.size()) {
-				cout << "Invalid index" << endl;
+				cout << "Item not found.\n";
 				break;
 			}
-			size_t ChosenConIndex = static_cast<size_t>(zeroBase);
 
-			BagResult r = myBag.RemoveOneByIndex(ChosenConIndex);
+
+			BagResult r = myBag.RemoveOneByIndex(idx);
 
 			if (r == BagResult::Success) {
 				cout << "Quantity reduced by 1" << endl;
@@ -94,9 +114,11 @@ int main() {
 
 			else {
 				cout << "View Items" << endl;
-				for (size_t i = 0; i < items.size(); i++)
+				for (const auto& item : items)
 				{
-					cout << (i + 1) << ") " << items[i].name << " x" << items[i].quantity << '\n';
+					cout << item.name << " x" << item.quantity << "["
+						 << ItemTypeToString(item.type) << "]"
+						 << " [id: " << item.id << "]\n";
 				}
 			}
 
@@ -107,9 +129,10 @@ int main() {
 			auto sorted = myBag.GetItemsSortedByName(true);
 			for (size_t i = 0; i < sorted.size(); ++i)
 			{
-				std::cout << i << ") " << sorted[i].name
+				std::cout << sorted[i].name
 					<< " x" << sorted[i].quantity
-					<< " (id " << sorted[i].id << ")\n";
+					<< "[" << ItemTypeToString(sorted[i].type) << "]"
+					<< " [id " << sorted[i].id << "]\n";
 			}
 			break;
 		}
@@ -129,8 +152,9 @@ int main() {
 			{
 				for (size_t idx : matches)
 				{
-					cout << items[idx].name << " x" << items[idx].quantity
-						<< " (id " << items[idx].id << ")\n";
+					cout << items[idx].name << " x" << items[idx].quantity << "[" << 
+						ItemTypeToString(items[idx].type) << "]"
+						<< " [id " << items[idx].id << "]\n";
 				}
 			}
 			break;
@@ -167,6 +191,7 @@ int main() {
 		}
 	}
 	while (running);
-
+	
 	
 };
+

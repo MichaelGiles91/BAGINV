@@ -1,7 +1,6 @@
 #pragma once
 #include <vector>
 #include <string>
-#include "stdlib.h"
 #include "fstream"
 #include "sstream"
 #include <algorithm>
@@ -11,6 +10,7 @@
 
 
 using namespace std;
+
 enum class ItemType
 {
 	Armor,
@@ -43,7 +43,7 @@ public:
 
 
 	//adds item by name and returns IDs
-	BagResult AddItem(const std::string& name, int quantityToAdd, int& outItemId);
+	BagResult AddItem(const std::string& name, int quantityToAdd, int& outItemId, ItemType type = ItemType::Misc);
 
 	// Removes Items at the given index (0 based) returns true if removed.
 	BagResult RemoveItemByIndex(size_t index);
@@ -70,7 +70,7 @@ public:
 private:
 	static std::string Trim(const std::string& s);
 	static std::string Tolower(std::string s);
-	static bool NamesEqual(const std::string& a, const std::string& b, bool caseInsensitive);
+	bool NamesEqual(const std::string& a, const std::string& b, bool caseInsensitive);
 	static bool isStackable(ItemType type);
 	
 	vector<InventoryItem> items;
