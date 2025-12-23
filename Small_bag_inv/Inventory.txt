@@ -1,5 +1,2 @@
-1 Man Pleaser 544
-2 Taint Tickler 644
-3 abucus 144
-4 Worn Leather Leggings 144
-5 Crimson Redscale Chestplate 144
+1 Health Potion 5 1 1 10
+2 Iron Helm 1 0 2 120
