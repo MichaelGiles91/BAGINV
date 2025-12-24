@@ -1,2 +1,1 @@
-1 Health Potion 5 1 1 10
-2 Iron Helm 1 0 2 120
+1 5

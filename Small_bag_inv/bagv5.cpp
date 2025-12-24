@@ -1,4 +1,4 @@
-#include "bagv4.h"
+#include "bagv5.h"
 
 
 
@@ -44,6 +44,10 @@ BagResult bag::AddItem(const std::string& name, int quantityToAdd, int& outItemI
 	if (cleanName.empty()) return BagResult::InvalidInput;
 
 	if (quantityToAdd <= 0) return BagResult::InvalidInput;
+	if (type == ItemType::Armor && quantityToAdd != 1)
+	{
+		return BagResult::NonStackable;
+	}
 	if (quantityToAdd > MAX_STACK) return BagResult::StackOverflow;
 
 	// clamp metadata
@@ -84,10 +88,30 @@ BagResult bag::AddItem(const std::string& name, int quantityToAdd, int& outItemI
 	newItem.type = type;
 	newItem.rarity = rarity;
 	newItem.value = value;
+	if (items.size() >= maxSlots)
+		return BagResult::BagFull;
 
 	items.push_back(newItem);
 	outItemId = newItem.id;
 	return BagResult::Success;
+}
+BagResult bag::AddItemByDefId(int defId, int quantityToAdd, int& outItemId)
+{
+	auto it = defs.find(defId);
+	if (it == defs.end()) {
+		return BagResult::NotFound; // or InvalidInput if you prefer
+	}
+	const ItemDef& d = it->second;
+	return AddItem(d.name, quantityToAdd, outItemId, d.type, d.rarity, d.value);
+
+}
+BagResult bag::ConsumeById(int id)
+{
+	return RemoveOneById(id);
+}
+BagResult bag::RemoveEntryById(int id)
+{
+	return RemoveItemById(id);
 }
 BagResult bag::RemoveItemByIndex(size_t index)
 {
@@ -178,6 +202,39 @@ std::vector<InventoryItem> bag::GetItemsSortedById(bool ascending) const
 	return copy;
 }
 
+void bag::SetMaxSlots(size_t slots)
+{
+	maxSlots = slots;
+}
+
+size_t bag::GetMaxSlots() const
+{
+	return maxSlots;
+}
+
+BagResult bag::RegisterItemDef(const ItemDef& def)
+{
+	if (def.id < 0) return BagResult::InvalidInput;
+	if (def.name.empty()) return BagResult::InvalidInput;
+
+	// prevent duplicates unless you want overwrite behavior
+	if (defs.find(def.id) != defs.end())
+		return BagResult::AlreadyExists; // if you have this, otherwise InvalidInput
+
+	defs.emplace(def.id, def);
+	return BagResult::Success;
+}
+
+const ItemDef* bag::GetItemDef(int id) const
+{
+	auto it = defs.find(id);
+	if (it == defs.end())
+	{ 
+		return nullptr;
+	}
+	return &it->second;
+}
+
 std::string bag::Trim(const std::string& s)
 {
 	size_t start = 0;
@@ -230,13 +287,7 @@ BagResult bag::SaveToFiles(const std::string& filename) const
 
 	for (const auto& item : items)
 	{
-		outFile
-			<< item.id << ' '
-			<< item.name << ' '
-			<< item.quantity << ' '
-			<< static_cast<int>(item.type) << ' '
-			<< item.rarity << ' '
-			<< item.value << '\n';
+		outFile << item.id << " " << item.quantity << "\n";
 	}
 
 	return BagResult::Success;
@@ -249,96 +300,17 @@ BagResult bag::LoadFromFiles(const std::string& filename)
 		return BagResult::FileOpenFailed;
 
 	items.clear();
-	int maxId = -1;
 
-	std::string line;
-	while (std::getline(inFile, line))
+	int defId = 0;
+	int qty = 0;
+
+	while (inFile >> defId >> qty)
 	{
-		line = Trim(line);
-		if (line.empty()) continue;
-
-		size_t firstSpace = line.find(' ');
-		if (firstSpace == std::string::npos) continue;
-
-		std::string idStr = Trim(line.substr(0, firstSpace));
-		std::string working = Trim(line.substr(firstSpace + 1));
-		if (working.empty()) continue;
-
-		auto popLastToken = [&](std::string& s) -> std::string
-			{
-				s = Trim(s);
-				size_t p = s.rfind(' ');
-				if (p == std::string::npos)
-				{
-					std::string t = s;
-					s.clear();
-					return t;
-				}
-				std::string t = Trim(s.substr(p + 1));
-				s = Trim(s.substr(0, p));
-				return t;
-			};
-
-		std::string t4 = popLastToken(working);
-		std::string t3 = popLastToken(working);
-		std::string t2 = popLastToken(working);
-		std::string t1 = popLastToken(working);
-
-		std::string nameStr;
-		std::string qtyStr;
-		std::string typeStr;
-		std::string rarityStr;
-		std::string valueStr;
-
-		if (IsInteger(t1) && IsInteger(t2) && IsInteger(t3) && IsInteger(t4))
-		{
-			nameStr = working;
-			qtyStr = t1;
-			typeStr = t2;
-			rarityStr = t3;
-			valueStr = t4;
-		}
-		else if (IsInteger(t1) && IsInteger(t2))
-		{
-			nameStr = working;
-			qtyStr = t1;
-			typeStr = t2;
-			rarityStr = "0";
-			valueStr = "0";
-		}
-		else
-		{
-			continue;
-		}
-
-		InventoryItem item{};
-		try
-		{
-			item.id = std::stoi(idStr);
-			item.quantity = std::stoi(qtyStr);
-			item.type = static_cast<ItemType>(std::stoi(typeStr));
-			item.rarity = std::stoi(rarityStr);
-			item.value = std::stoi(valueStr);
-		}
-		catch (...)
-		{
-			continue;
-		}
-
-		if (item.id < 0) continue;
-		if (item.quantity <= 0 || item.quantity > MAX_STACK) continue;
-		if (item.rarity < 0) item.rarity = 0;
-		if (item.rarity > 10) item.rarity = 10;
-		if (item.value < 0) item.value = 0;
-
-		item.name = Trim(nameStr);
-		if (item.name.empty()) continue;
-
-		items.push_back(item);
-		if (item.id > maxId) maxId = item.id;
+		int outId = -1;
+		BagResult r = AddItemByDefId(defId, qty, outId);
+		if (r != BagResult::Success)
+			return r;
 	}
-
-	NextId = (maxId >= 0) ? maxId + 1 : 1;
 	return BagResult::Success;
 }
 const InventoryItem* bag::FindById(int id) const

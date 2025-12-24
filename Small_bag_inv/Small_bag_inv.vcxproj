@@ -123,13 +123,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="bagv4.cpp" />
+    <ClCompile Include="bagv5.cpp" />
     <ClCompile Include="engine_demo.cpp" />
-    <ClCompile Include="mainv4.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bagv4.h" />
-    <ClInclude Include="bag_Utils.h" />
+    <ClInclude Include="bagv5.h" />
+    <ClInclude Include="bag_Utilsv5.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Inventory.txt" />

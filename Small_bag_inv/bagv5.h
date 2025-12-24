@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstddef>
+#include <unordered_map>
 
 
 
@@ -20,6 +21,18 @@ enum class ItemType
 	Quest,
 	Misc
 };
+enum class BagResult
+{
+	Success,
+	InvalidInput,
+	NotFound,
+	StackOverflow,
+	FileOpenFailed,
+	ParseError,
+	BagFull,
+	NonStackable,
+	AlreadyExists
+};
 struct InventoryItem {
 	int id = -1; // unique ids assigned by inv
 	std::string name; // display item name
@@ -28,15 +41,15 @@ struct InventoryItem {
 	int value = 0;
 	int rarity = 0;
 };
-enum class BagResult
-{
-	Success,
-	InvalidInput,
-	NotFound,
-	StackOverflow,
-	FileOpenFailed,
-	ParseError
+struct ItemDef {
+	int id = -1;
+	std::string name;
+	ItemType type;
+	int rarity = 0;
+	int value = 0;
+	bool stackable = true;
 };
+
 
 class bag
 {
@@ -48,7 +61,12 @@ public:
 
 
 	//adds item by name and returns IDs
-	BagResult AddItem(const std::string& name, int quantityToAdd, int& outItemId, ItemType type = ItemType::Misc, int rarity = 0, int value =0);
+	BagResult AddItem(const std::string& name, int quantityToAdd, int& outItemId, ItemType type = ItemType::Misc, int rarity = 0, int value = 0);
+	BagResult AddItemByDefId(int defId, int quantityToAdd, int& outItemId);
+
+	BagResult ConsumeById(int id);
+	BagResult RemoveEntryById(int id);
+	
 	BagResult RemoveItemById(int id);
 	BagResult RemoveOneById(int id);
 	// Removes Items at the given index (0 based) returns true if removed.
@@ -64,6 +82,8 @@ public:
 	//read only acces for items
 	const std::vector<InventoryItem>& GetItems()const;
 
+
+	// save/load
 	BagResult SaveToFiles(const std::string& filename) const;
 	BagResult LoadFromFiles(const std::string& filename);
 
@@ -78,6 +98,14 @@ public:
 	std::vector<InventoryItem> GetItemsSortedByQuantity(bool ascending = true) const;
 	std::vector<InventoryItem> GetItemsSortedById(bool ascending = true) const;
 	
+
+	// max slots
+	void SetMaxSlots(size_t slots);
+	size_t GetMaxSlots() const;
+
+	// Register each item with unordered map Def
+	BagResult RegisterItemDef(const ItemDef& def);
+	const ItemDef* GetItemDef(int id) const;
 private:
 	static std::string Trim(const std::string& s);
 	static std::string Tolower(std::string s);
@@ -87,6 +115,8 @@ private:
 	std::vector<InventoryItem> items;
 	int NextId;
 
+	size_t maxSlots = 30; 
+	std::unordered_map<int, ItemDef> defs;
 	
 };
 

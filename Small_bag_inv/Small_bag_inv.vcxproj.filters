@@ -15,10 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="mainv4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="bagv4.cpp">
+    <ClCompile Include="bagv5.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="engine_demo.cpp">
@@ -26,10 +23,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bagv4.h">
+    <ClInclude Include="bagv5.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="bag_Utils.h">
+    <ClInclude Include="bag_Utilsv5.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
