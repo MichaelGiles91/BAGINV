@@ -97,13 +97,44 @@ BagResult bag::AddItem(const std::string& name, int quantityToAdd, int& outItemI
 }
 BagResult bag::AddItemByDefId(int defId, int quantityToAdd, int& outItemId)
 {
-	auto it = defs.find(defId);
-	if (it == defs.end()) {
-		return BagResult::NotFound; // or InvalidInput if you prefer
-	}
-	const ItemDef& d = it->second;
-	return AddItem(d.name, quantityToAdd, outItemId, d.type, d.rarity, d.value);
+	outItemId = -1;
 
+	auto it = defs.find(defId);
+	if (it == defs.end())
+		return BagResult::NotFound;
+
+	const ItemDef& d = it->second;
+
+	if (quantityToAdd <= 0) return BagResult::InvalidInput;
+	if (!d.stackable && quantityToAdd != 1) return BagResult::NonStackable;
+	if (quantityToAdd > MAX_STACK) return BagResult::StackOverflow;
+
+	// Slot check: new entry costs a slot, merge does not.
+	auto existingIndex = FindIndexByIdInternal(items, defId);
+	if (existingIndex == static_cast<size_t>(-1))
+	{
+		if (items.size() >= maxSlots) return BagResult::StackOverflow; // or a dedicated "BagFull"
+		InventoryItem ni{};
+		ni.id = defId;               // key point: id == defId
+		ni.name = d.name;
+		ni.quantity = quantityToAdd;
+		ni.type = d.type;
+		ni.rarity = d.rarity;
+		ni.value = d.value;
+		items.push_back(ni);
+		outItemId = defId;
+		return BagResult::Success;
+	}
+	// If it exists already
+	InventoryItem& existing = items[existingIndex];
+	if (!d.stackable) return BagResult::NonStackable;
+
+	if (existing.quantity + quantityToAdd > MAX_STACK)
+		return BagResult::StackOverflow;
+
+	existing.quantity += quantityToAdd;
+	outItemId = defId;
+	return BagResult::Success;
 }
 BagResult bag::ConsumeById(int id)
 {

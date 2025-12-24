@@ -31,10 +31,11 @@ enum class BagResult
 	ParseError,
 	BagFull,
 	NonStackable,
-	AlreadyExists
+	AlreadyExists,
+	Unknown
 };
 struct InventoryItem {
-	int id = -1; // unique ids assigned by inv
+	int id = -1; // item definition id(defId(. stable across save/load
 	std::string name; // display item name
 	int quantity = 0; // displays the number of one unique item
 	ItemType type = ItemType::Misc;// displays item type
@@ -44,7 +45,7 @@ struct InventoryItem {
 struct ItemDef {
 	int id = -1;
 	std::string name;
-	ItemType type;
+	ItemType type = ItemType::Misc;
 	int rarity = 0;
 	int value = 0;
 	bool stackable = true;

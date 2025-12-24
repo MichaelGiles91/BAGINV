@@ -16,6 +16,7 @@ inline const char* ToString(BagResult r)
     case BagResult::BagFull: return "Bag is full";
     case BagResult::NonStackable: return "Item is not Stackable";
     case BagResult::AlreadyExists: return "This item already exists";
+    case BagResult::Unknown: return "Unknown";
     default: return "Unknown";
     }
 }

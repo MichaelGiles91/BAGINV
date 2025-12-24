@@ -125,10 +125,12 @@
   <ItemGroup>
     <ClCompile Include="bagv5.cpp" />
     <ClCompile Include="engine_demo.cpp" />
+    <ClCompile Include="InventoryWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bagv5.h" />
     <ClInclude Include="bag_Utilsv5.h" />
+    <ClInclude Include="InventoryWrapper.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Inventory.txt" />
